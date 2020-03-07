@@ -29,6 +29,39 @@ class TestLexer:
             TokenType.STAR,
         ] == list(map(lambda x: x.type, tokens))
 
+    def test_whitespace_is_ignored(self):
+        lexer = Lexer('+ +')
+        tokens = lex_all(lexer)
+
+        assert [
+           TokenType.PLUS,
+           TokenType.PLUS,
+        ] == list(map(lambda x: x.type, tokens))
+
+    def test_comment_is_ignored(self):
+        lexer = Lexer('+ //hello this is a comment\n+')
+        tokens = lex_all(lexer)
+
+        assert [
+           TokenType.PLUS,
+           TokenType.PLUS,
+        ] == list(map(lambda x: x.type, tokens))
+
+    def test_multichar_tokens(self):
+        lexer = Lexer('! != = == < <= > >=')
+        tokens = lex_all(lexer)
+
+        assert [
+            TokenType.BANG,
+            TokenType.BANG_EQUAL,
+            TokenType.EQUAL,
+            TokenType.EQUAL_EQUAL,
+            TokenType.LESS,
+            TokenType.LESS_EQUAL,
+            TokenType.GREATER,
+            TokenType.GREATER_EQUAL,
+        ] == list(map(lambda x: x.type, tokens))
+
     def test_invalid_char_should_throw(self):
         lexer = Lexer('@')
 
