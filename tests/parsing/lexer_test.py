@@ -69,6 +69,16 @@ class TestLexer:
         assert TokenType.STRING == token.type
         assert "Hello\nWorld" == token.literal
 
+    def test_number_tokens(self):
+        lexer = Lexer('1234 12.34')
+        tokens = lex_all(lexer)
+
+        assert all(map(lambda x: x.type == TokenType.NUMBER, tokens))
+        assert [
+           1234,
+           12.34,
+        ] == list(map(lambda x: x.literal, tokens))
+
     def test_invalid_char_should_throw(self):
         lexer = Lexer('@')
 

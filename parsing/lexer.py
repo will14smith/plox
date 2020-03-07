@@ -12,6 +12,10 @@ def is_newline(c: str) -> bool:
     return c == '\n'
 
 
+def is_digit(c: str) -> bool:
+    return '0' <= c <= '9'
+
+
 class Lexer:
     __token_start_switch: Dict[str, Callable[['Lexer'], Token]] = {
         '-': lambda self: self.__create_token(TokenType.MINUS),
@@ -43,10 +47,13 @@ class Lexer:
 
         c = self.__advance()
         handler = self.__token_start_switch.get(c)
-        if handler is None:
-            raise self.__error(InvalidLexerCharException, 'Invalid char \'{}\''.format(c))
+        if handler is not None:
+            return handler(self)
 
-        return handler(self)
+        if is_digit(c):
+            return self.__handle_number()
+
+        raise self.__error(InvalidLexerCharException, 'Invalid char \'{}\''.format(c))
 
     def __handle_slash(self):
         if not self.__advance_if('/'):
@@ -76,6 +83,21 @@ class Lexer:
         literal_span = SourceSpan.from_positions(literal_start, literal_end)
         return self.__create_token(TokenType.STRING, literal_span.text())
 
+    def __handle_number(self):
+        while is_digit(self.__peek()):
+            self.__advance()
+
+        if self.__peek() == '.' and is_digit(self.__peek(1)):
+            # consume the decimal point
+            self.__advance()
+
+            while is_digit(self.__peek()):
+                self.__advance()
+
+        literal_span = SourceSpan.from_positions(self.__start, self.__current)
+        literal = float(literal_span.text())
+        return self.__create_token(TokenType.NUMBER, literal)
+
     def __skip_whitespace(self):
         while is_whitespace(self.current) or is_newline(self.current):
             self.__advance()
@@ -97,10 +119,10 @@ class Lexer:
         self.__advance()
         return True
 
-    def __peek(self) -> str:
-        if self.is_at_end:
+    def __peek(self, offset: int = 0) -> str:
+        if self.__current.position.offset + offset >= len(self.__current.source):
             return '\0'
-        return self.current
+        return self.__current.source[self.__current.position.offset + offset]
 
     def __create_token(self, token_type: TokenType, value: Optional[Union[str, float, bool]] = None) -> Token:
         span = SourceSpan.from_positions(self.__start, self.__current)
