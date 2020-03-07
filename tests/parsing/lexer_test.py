@@ -1,4 +1,4 @@
-import unittest
+import pytest
 
 from typing import List
 from parsing.lexer import Lexer, LexerException
@@ -17,27 +17,23 @@ def lex_all(lexer: Lexer) -> List[Token]:
     return tokens
 
 
-class LexerTests(unittest.TestCase):
+class TestLexer:
     def test_single_char_tokens(self):
         lexer = Lexer('+-/*')
         tokens = lex_all(lexer)
 
-        self.assertEqual([
+        assert [
             TokenType.PLUS,
             TokenType.MINUS,
             TokenType.SLASH,
             TokenType.STAR,
-        ], list(map(lambda x: x.type, tokens)))
+        ] == list(map(lambda x: x.type, tokens))
 
     def test_invalid_char_should_throw(self):
         lexer = Lexer('@')
 
-        with self.assertRaises(LexerException):
+        with pytest.raises(LexerException):
             lexer.next()
 
     def assertType(self, expected: TokenType, actual_token: Token):
-        self.assertEqual(expected, actual_token.type)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert expected == actual_token.type
