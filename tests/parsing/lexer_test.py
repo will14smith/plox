@@ -62,11 +62,21 @@ class TestLexer:
             TokenType.GREATER_EQUAL,
         ] == list(map(lambda x: x.type, tokens))
 
+    def test_string_tokens(self):
+        lexer = Lexer('"Hello\nWorld\"')
+        token = lexer.next()
+
+        assert TokenType.STRING == token.type
+        assert "Hello\nWorld" == token.literal
+
     def test_invalid_char_should_throw(self):
         lexer = Lexer('@')
 
         with pytest.raises(LexerException):
             lexer.next()
 
-    def assertType(self, expected: TokenType, actual_token: Token):
-        assert expected == actual_token.type
+    def test_unterminated_string_should_throw(self):
+        lexer = Lexer('"Hello\nWorld')
+
+        with pytest.raises(LexerException):
+            lexer.next()
