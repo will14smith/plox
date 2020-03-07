@@ -1,6 +1,8 @@
 from enum import Enum, auto
 from typing import Union, Optional
 
+from parsing.source import SourceSpan
+
 
 class TokenType(Enum):
     # single char
@@ -32,34 +34,24 @@ class TokenType(Enum):
 
 
 class Token:
-    def __init__(self, type: TokenType, lexeme: str, literal: Optional[Union[str, float, bool]], line: int, offset: int):
-        self._type = type
-        self._lexeme = lexeme
-        self._literal = literal
-        self._line = line
-        self._offset = offset
+    def __init__(self, type: TokenType, span: SourceSpan, literal: Optional[Union[str, float, bool]]):
+        self.__type = type
+        self.__span = span
+        self.__literal = literal
 
     @property
     def type(self):
-        return self._type
+        return self.__type
 
     @property
-    def lexeme(self):
-        return self._lexeme
+    def span(self):
+        return self.__span
 
     @property
     def literal(self):
-        return self._literal
-
-    @property
-    def line(self):
-        return self._line
-
-    @property
-    def offset(self):
-        return self._offset
+        return self.__literal
 
     def __str__(self) -> str:
-        return '{} {} {}'.format(self.type, self.lexeme, self.literal)
+        return '{} {} {}'.format(self.type, self.span.start, self.literal)
 
 

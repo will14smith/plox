@@ -1,5 +1,6 @@
 from typing import Callable, Dict, Optional, Union
 
+from parsing.source import SourcePosition, SourceSpan
 from parsing.token import Token, TokenType
 
 
@@ -27,17 +28,14 @@ class Lexer:
     }
 
     def __init__(self, input: str):
-        self.__input = input
-        self.__start = 0
-        self.__offset = 0
-        self.__line = 1
-        self.__line_offset_start = 0
+        self.__current = SourcePosition.initial(input)
+        self.__start = self.__current
 
     def next(self) -> Optional[Token]:
         if self.is_at_end:
             return None
 
-        self.__start = self.__offset
+        self.__start = self.__current
         return self.__scan_token()
 
     def __scan_token(self):
@@ -61,73 +59,73 @@ class Lexer:
         return self.next()
 
     def __handle_string(self):
+        literal_start = self.__current
+
         while self.__peek() != '"' and not self.is_at_end:
-            if is_newline(self.__peek()):
-                self.__start_new_line()
             self.__advance()
 
         if self.is_at_end:
             raise self.__error(UnterminatedStringException, 'Unterminated string')
 
+        literal_end = self.__current
+
         # consume the closing quote
         self.__advance()
 
         # trim the quotes
-        value = self.__input[self.__start + 1:self.__offset - 1]
-        return self.__create_token(TokenType.STRING, value)
+        literal_span = SourceSpan.from_positions(literal_start, literal_end)
+        return self.__create_token(TokenType.STRING, literal_span.text())
 
     def __skip_whitespace(self):
         while is_whitespace(self.current) or is_newline(self.current):
-            self.__offset += 1
-            if is_newline(self.current):
-                self.__start_new_line()
-
-    def __start_new_line(self):
-        self.__line += 1
-        self.__line_offset_start += self.__offset
+            self.__advance()
 
     def __advance(self) -> str:
-        self.__offset += 1
-        return self.__input[self.__offset - 1]
+        c = self.current
+        if is_newline(c):
+            self.__current = self.__current.new_line()
+        else:
+            self.__current = self.__current.next()
+        return c
 
     def __advance_if(self, expected: str) -> bool:
         if self.is_at_end:
             return False
-        if self.__input[self.__offset] != expected:
+        if self.current != expected:
             return False
 
-        self.__offset += 1
+        self.__advance()
         return True
 
     def __peek(self) -> str:
         if self.is_at_end:
             return '\0'
-        return self.__input[self.__offset]
+        return self.current
 
     def __create_token(self, token_type: TokenType, value: Optional[Union[str, float, bool]] = None) -> Token:
-        return Token(token_type, self.__input[self.__start:self.__offset], value,
-                     self.__line, self.__offset - self.__line_offset_start)
+        span = SourceSpan.from_positions(self.__start, self.__current)
+        return Token(token_type, span, value)
 
     def __error(self, exception_cls, message):
-        return exception_cls(message, self.__line, self.__offset - self.__line_offset_start)
+        span = SourceSpan.from_positions(self.__start, self.__current)
+        return exception_cls(message, span)
 
     @property
     def current(self):
-        return self.__input[self.__offset]
+        return self.__current.source[self.__current.position.offset]
 
     @property
     def is_at_end(self) -> bool:
-        return self.__offset >= len(self.__input)
+        return self.__current.is_at_end
 
 
 class LexerException(Exception):
-    def __init__(self, message, line, line_offset):
+    def __init__(self, message: str, span: SourceSpan):
         self.message = message
-        self.line = line
-        self.line_offset = line_offset
+        self.span = span
 
     def __str__(self) -> str:
-        return '{} at line {}:{}'.format(self.message, self.line, self.line_offset)
+        return '{} at line {} - {}'.format(self.message, self.span.start, self.span.end)
 
 
 class InvalidLexerCharException(LexerException):
