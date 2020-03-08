@@ -100,3 +100,26 @@ class SourceSpan:
         return '{} - {}'.format(self.start, self.end)
 
 
+def highlight(span: SourceSpan) -> str:
+    lines = span.source.split('\n')[span.start.line - 1:span.end.line]
+
+    output = []
+    for i, line in enumerate(lines):
+        line_number = i + span.start.line
+
+        if line_number == span.start.line:
+            highlight = ' ' * (span.start.line_offset - 1)
+            if line_number == span.end.line:
+                highlight += '~' * (span.end.line_offset - span.start.line_offset)
+            else:
+                highlight += '~' * (len(line) - span.start.line_offset + 1)
+        elif line_number == span.end.line:
+            highlight = '~' * (span.end.line_offset - 1)
+        else:
+            highlight = '~' * len(line)
+
+        # TODO handle padding when i >= 9
+        output.append('{}. {}'.format(line_number, line))
+        output.append('   {}'.format(highlight))
+
+    return '\n'.join(output)

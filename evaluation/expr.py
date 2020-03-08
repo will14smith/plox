@@ -1,8 +1,8 @@
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 import parsing.expr as exprs
 from parsing.expr import Expr, ExprVisitor
-from parsing.source import SourceSpan
+from parsing.source import highlight, SourceSpan
 
 BinaryOpHandler = Callable[['ExpressionEvaluator', exprs.Binary, Any, Any], Any]
 UnaryOpHandler = Callable[['ExpressionEvaluator', exprs.Unary, Any], Any]
@@ -114,14 +114,18 @@ class ExprEvaluator(ExprVisitor):
         if isinstance(value, int) or isinstance(value, float):
             return
 
-        raise RuntimeException(span, "Expected a number")
+        raise RuntimeException(span, 'Expected a number')
 
 
 class RuntimeException(Exception):
-    def __init__(self, span: SourceSpan, message: str) -> None:
+    def __init__(self, span: Optional[SourceSpan], message: str) -> None:
         self.__span = span
         self.__message = message
 
     def __str__(self) -> str:
-        return "{} at {}".format(self.__message, self.__span)
+        output = '{} at {}'.format(self.__message, self.__span)
+        if self.__span is None:
+            return output
 
+        lines = highlight(self.__span)
+        return '{}\n{}'.format(output, lines)
