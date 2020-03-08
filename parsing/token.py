@@ -5,6 +5,8 @@ from parsing.source import SourceSpan
 
 
 class TokenType(Enum):
+    EOF = auto()
+
     # single char
     LEFT_PAREN = auto()
     RIGHT_PAREN = auto()

@@ -95,6 +95,8 @@ class SourceSpan:
 
     def __str__(self) -> str:
         if self.start.line == self.end.line:
+            if self.start.line_offset + 1 == self.end.line_offset:
+                return '{}'.format(self.start)
             return '{}-{}'.format(self.start, self.end.line_offset)
 
         return '{} - {}'.format(self.start, self.end)

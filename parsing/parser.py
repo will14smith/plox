@@ -2,7 +2,7 @@ from typing import List
 
 import parsing.expr as exprs
 from parsing.expr import Expr
-from parsing.source import SourceSpan
+from parsing.source import SourceSpan, highlight
 from parsing.token import Token, TokenType
 
 
@@ -172,7 +172,7 @@ class ParserException(Exception):
         return self.__token
 
     def __str__(self) -> str:
-        return '{} ({} at {})'.format(self.__message, self.__token.type, self.token.span)
+        return '{} ({} at {})\n{}'.format(self.__message, self.__token.type, self.token.span, highlight(self.token.span))
 
 
 class UnexpectedTokenError(ParserException):
@@ -181,4 +181,4 @@ class UnexpectedTokenError(ParserException):
         self.__expected_type = expected_type
 
     def __str__(self) -> str:
-        return '{} (expected {} but got {} at {})'.format(self.__message, self.__expected_type, self.token.type, self.token.span)
+        return '{} (expected {} but got {} at {})\n{}'.format(self.__message, self.__expected_type, self.token.type, self.token.span, highlight(self.token.span))

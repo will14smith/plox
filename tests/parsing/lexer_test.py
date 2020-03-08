@@ -1,13 +1,20 @@
+from typing import List
+
 import pytest
 
 from parsing.lexer import get_all_tokens, Lexer, LexerException
-from parsing.token import TokenType
+from parsing.token import TokenType, Token
+
+
+def tokenize(input: str) -> List[Token]:
+    lexer = Lexer(input)
+    tokens = get_all_tokens(lexer)
+    return tokens[:-1]  # remove the EOF token
 
 
 class TestLexer:
     def test_single_char_tokens(self):
-        lexer = Lexer('()+-/*')
-        tokens = get_all_tokens(lexer)
+        tokens = tokenize('()+-/*')
 
         assert list(map(lambda x: x.type, tokens)) == [
             TokenType.LEFT_PAREN,
@@ -19,26 +26,23 @@ class TestLexer:
         ]
 
     def test_whitespace_is_ignored(self):
-        lexer = Lexer('+ +')
-        tokens = get_all_tokens(lexer)
+        tokens = tokenize('+ +')
 
         assert list(map(lambda x: x.type, tokens)) == [
-           TokenType.PLUS,
-           TokenType.PLUS,
+            TokenType.PLUS,
+            TokenType.PLUS,
         ]
 
     def test_comment_is_ignored(self):
-        lexer = Lexer('+ //hello this is a comment\n+')
-        tokens = get_all_tokens(lexer)
+        tokens = tokenize('+ //hello this is a comment\n+')
 
         assert list(map(lambda x: x.type, tokens)) == [
-           TokenType.PLUS,
-           TokenType.PLUS,
+            TokenType.PLUS,
+            TokenType.PLUS,
         ]
 
     def test_multichar_tokens(self):
-        lexer = Lexer('! != = == < <= > >=')
-        tokens = get_all_tokens(lexer)
+        tokens = tokenize('! != = == < <= > >=')
 
         assert list(map(lambda x: x.type, tokens)) == [
             TokenType.BANG,
@@ -52,25 +56,23 @@ class TestLexer:
         ]
 
     def test_string_tokens(self):
-        lexer = Lexer('"Hello\nWorld\"')
-        token = lexer.next()
+        tokens = tokenize('"Hello\nWorld\"')
+        token = tokens[0]
 
         assert TokenType.STRING == token.type
         assert "Hello\nWorld" == token.literal
 
     def test_number_tokens(self):
-        lexer = Lexer('1234 12.34')
-        tokens = get_all_tokens(lexer)
+        tokens = tokenize('1234 12.34')
 
         assert all(map(lambda x: x.type == TokenType.NUMBER, tokens))
         assert list(map(lambda x: x.literal, tokens)) == [
-           1234,
-           12.34,
+            1234,
+            12.34,
         ]
 
     def test_identifier_tokens(self):
-        lexer = Lexer('a abc')
-        tokens = get_all_tokens(lexer)
+        tokens = tokenize('a abc')
 
         assert all(map(lambda x: x.type == TokenType.IDENTIFIER, tokens))
         assert list(map(lambda x: x.span.text(), tokens)) == [
@@ -79,8 +81,7 @@ class TestLexer:
         ]
 
     def test_keyword_tokens(self):
-        lexer = Lexer('and or')
-        tokens = get_all_tokens(lexer)
+        tokens = tokenize('and or')
 
         assert list(map(lambda x: x.type, tokens)) == [
             TokenType.AND,

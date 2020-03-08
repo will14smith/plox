@@ -1,6 +1,6 @@
 from typing import Callable, Dict, List, Optional, Union
 
-from parsing.source import SourcePosition, SourceSpan
+from parsing.source import SourcePosition, SourceSpan, highlight
 from parsing.token import Token, TokenType
 
 
@@ -63,10 +63,16 @@ class Lexer:
     def __init__(self, input: str):
         self.__current = SourcePosition.initial(input)
         self.__start = self.__current
+        self.__eof_emitted = False
 
     def next(self) -> Optional[Token]:
         if self.is_at_end:
-            return None
+            if self.__eof_emitted:
+                return None
+
+            self.__eof_emitted = True
+            span = SourceSpan.from_positions(self.__current, self.__current.next())
+            return Token(TokenType.EOF, span, None)
 
         self.__skip_whitespace()
         self.__start = self.__current
@@ -145,7 +151,7 @@ class Lexer:
         return self.__create_token(TokenType.IDENTIFIER)
 
     def __skip_whitespace(self):
-        while is_whitespace(self.current) or is_newline(self.current):
+        while not self.is_at_end and is_whitespace(self.current) or is_newline(self.current):
             self.__advance()
 
     def __advance(self) -> str:
@@ -193,7 +199,7 @@ class LexerException(Exception):
         self.span = span
 
     def __str__(self) -> str:
-        return '{} at line {} - {}'.format(self.message, self.span.start, self.span.end)
+        return '{} at {}\n{}'.format(self.message, self.span, highlight(self.span))
 
 
 class InvalidLexerCharException(LexerException):
