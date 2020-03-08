@@ -5,17 +5,11 @@ from parsing.expr import Expr
 
 
 def parse_expr(input: str) -> Expr:
-    from parsing.lexer import Lexer
+    from parsing.lexer import get_all_tokens, Lexer
     from parsing.parser import Parser
 
     lexer = Lexer(input)
-
-    tokens = []
-    while 1:
-        token = lexer.next()
-        if token is None:
-            break
-        tokens.append(token)
+    tokens = get_all_tokens(lexer)
 
     parser = Parser(tokens)
     return parser.expression()

@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 from parsing.source import SourcePosition, SourceSpan
 from parsing.token import Token, TokenType
@@ -22,6 +22,18 @@ def is_alpha(c: str) -> bool:
 
 def is_alphanumeric(c: str) -> bool:
     return is_alpha(c) or is_digit(c)
+
+
+def get_all_tokens(lexer: 'Lexer') -> List[Token]:
+    tokens = []
+
+    while 1:
+        token = lexer.next()
+        if token is None:
+            break
+        tokens.append(token)
+
+    return tokens
 
 
 class Lexer:
