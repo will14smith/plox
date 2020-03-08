@@ -21,10 +21,10 @@ def assert_number(expr: Expr, value: float):
     assert expr.value == value
 
 
-def assert_binary(expr: Expr, operator: exprs.BinaryOperator) -> exprs.Binary:
+def assert_binary(expr: Expr, operator: exprs.BinaryOperatorType) -> exprs.Binary:
     __tracebackhide__ = True
     assert isinstance(expr, exprs.Binary)
-    assert expr.operator == operator
+    assert expr.operator.type == operator
     return expr
 
 
@@ -56,21 +56,21 @@ class TestParser:
         expr = parse_expr('-123')
 
         assert isinstance(expr, exprs.Unary)
-        assert expr.operator == exprs.UnaryOperator.NEGATE
+        assert expr.operator.type == exprs.UnaryOperatorType.NEGATE
         assert_number(expr.expression, 123)
 
     def test_binary(self):
         expr = parse_expr('123 * 456')
 
-        expr = assert_binary(expr, exprs.BinaryOperator.MULTIPLY)
+        expr = assert_binary(expr, exprs.BinaryOperatorType.MULTIPLY)
         assert_number(expr.left, 123)
         assert_number(expr.right, 456)
 
     def test_precedence(self):
         expr = parse_expr('123 + 456 * 789')
 
-        expr = assert_binary(expr, exprs.BinaryOperator.PLUS)
+        expr = assert_binary(expr, exprs.BinaryOperatorType.PLUS)
         assert_number(expr.left, 123)
-        expr = assert_binary(expr.right, exprs.BinaryOperator.MULTIPLY)
+        expr = assert_binary(expr.right, exprs.BinaryOperatorType.MULTIPLY)
         assert_number(expr.left, 456)
         assert_number(expr.right, 789)

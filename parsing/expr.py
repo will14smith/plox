@@ -2,6 +2,7 @@
 import abc
 from enum import auto, Enum
 from typing import Any
+from parsing.source import SourceSpan
 
 
 class Expr(abc.ABC):
@@ -10,7 +11,7 @@ class Expr(abc.ABC):
         pass
 
 
-class BinaryOperator(Enum):
+class BinaryOperatorType(Enum):
     MINUS = auto()
     PLUS = auto()
     MULTIPLY = auto()
@@ -23,9 +24,37 @@ class BinaryOperator(Enum):
     LESS_EQUAL = auto()
 
 
-class UnaryOperator(Enum):
+class BinaryOperator:
+    def __init__(self, type: BinaryOperatorType, source: SourceSpan) -> None:
+        self.__type = type
+        self.__source = source
+
+    @property
+    def type(self) -> BinaryOperatorType:
+        return self.__type
+
+    @property
+    def source(self) -> SourceSpan:
+        return self.__source
+
+
+class UnaryOperatorType(Enum):
     NEGATE = auto()
     NOT = auto()
+
+
+class UnaryOperator:
+    def __init__(self, type: UnaryOperatorType, source: SourceSpan) -> None:
+        self.__type = type
+        self.__source = source
+
+    @property
+    def type(self) -> UnaryOperatorType:
+        return self.__type
+
+    @property
+    def source(self) -> SourceSpan:
+        return self.__source
 
 
 class Binary(Expr):

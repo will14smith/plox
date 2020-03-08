@@ -6,31 +6,31 @@ from parsing.token import Token, TokenType
 
 
 token_type_to_binary_operator = {
-    TokenType.PLUS: exprs.BinaryOperator.PLUS,
-    TokenType.MINUS: exprs.BinaryOperator.MINUS,
-    TokenType.SLASH: exprs.BinaryOperator.DIVIDE,
-    TokenType.STAR: exprs.BinaryOperator.MULTIPLY,
-    TokenType.BANG_EQUAL: exprs.BinaryOperator.NOT_EQUAL,
-    TokenType.EQUAL_EQUAL: exprs.BinaryOperator.EQUAL,
-    TokenType.GREATER: exprs.BinaryOperator.GREATER,
-    TokenType.GREATER_EQUAL: exprs.BinaryOperator.GREATER_EQUAL,
-    TokenType.LESS: exprs.BinaryOperator.LESS,
-    TokenType.LESS_EQUAL: exprs.BinaryOperator.LESS_EQUAL,
+    TokenType.PLUS: exprs.BinaryOperatorType.PLUS,
+    TokenType.MINUS: exprs.BinaryOperatorType.MINUS,
+    TokenType.SLASH: exprs.BinaryOperatorType.DIVIDE,
+    TokenType.STAR: exprs.BinaryOperatorType.MULTIPLY,
+    TokenType.BANG_EQUAL: exprs.BinaryOperatorType.NOT_EQUAL,
+    TokenType.EQUAL_EQUAL: exprs.BinaryOperatorType.EQUAL,
+    TokenType.GREATER: exprs.BinaryOperatorType.GREATER,
+    TokenType.GREATER_EQUAL: exprs.BinaryOperatorType.GREATER_EQUAL,
+    TokenType.LESS: exprs.BinaryOperatorType.LESS,
+    TokenType.LESS_EQUAL: exprs.BinaryOperatorType.LESS_EQUAL,
 }
 token_type_to_unary_operator = {
-    TokenType.BANG: exprs.UnaryOperator.NOT,
-    TokenType.MINUS: exprs.UnaryOperator.NEGATE,
+    TokenType.BANG: exprs.UnaryOperatorType.NOT,
+    TokenType.MINUS: exprs.UnaryOperatorType.NEGATE,
 }
 
 
 def token_to_binary_operator(token: Token) -> exprs.BinaryOperator:
-    # TODO we probably want to track the original token for error reporting
-    return token_type_to_binary_operator[token.type]
+    type = token_type_to_binary_operator[token.type]
+    return exprs.BinaryOperator(type, token.span)
 
 
 def token_to_unary_operator(token: Token) -> exprs.UnaryOperator:
-    # TODO we probably want to track the original token for error reporting
-    return token_type_to_unary_operator[token.type]
+    type = token_type_to_unary_operator[token.type]
+    return exprs.UnaryOperator(type, token.span)
 
 
 class Parser:

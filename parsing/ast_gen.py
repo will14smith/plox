@@ -37,9 +37,23 @@ def generate_ast(base: str, imports: List[str], enums: EnumDict, types: Dict[str
 
     for name, items in enums.items():
         two_blank()
-        result.append('class {}(Enum):'.format(name))
+        result.append('class {}Type(Enum):'.format(name))
         for item in items:
             result.append('    {} = auto()'.format(item))
+
+        two_blank()
+        result.append('class {}:'.format(name))
+        result.append('    def __init__(self, type: {}Type, source: SourceSpan) -> None:'.format(name))
+        result.append('        self.__type = type')
+        result.append('        self.__source = source')
+        one_blank()
+        result.append('    @property')
+        result.append('    def type(self) -> {}Type:'.format(name))
+        result.append('        return self.__type')
+        one_blank()
+        result.append('    @property')
+        result.append('    def source(self) -> SourceSpan:')
+        result.append('        return self.__source')
 
     for name, fields in types.items():
         two_blank()
@@ -82,7 +96,8 @@ def define_ast(target: str, base: str, imports: List[str], enums: EnumDict, type
 def main():
     expr_base = "Expr"
     define_ast(path.join(output_dir, "expr.py"), expr_base, [
-        "from typing import Any"
+        "from typing import Any",
+        "from parsing.source import SourceSpan",
     ], {
         "BinaryOperator": ["MINUS", "PLUS", "MULTIPLY", "DIVIDE", "NOT_EQUAL", "EQUAL", "GREATER", "GREATER_EQUAL", "LESS", "LESS_EQUAL"],
         "UnaryOperator": ["NEGATE", "NOT"],
