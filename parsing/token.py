@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import auto, Enum
 from typing import Union, Optional
 
 from parsing.source import SourceSpan
