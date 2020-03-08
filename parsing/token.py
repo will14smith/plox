@@ -6,6 +6,8 @@ from parsing.source import SourceSpan
 
 class TokenType(Enum):
     # single char
+    LEFT_PAREN = auto()
+    RIGHT_PAREN = auto()
     MINUS = auto()
     PLUS = auto()
     SLASH = auto()

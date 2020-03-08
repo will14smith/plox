@@ -19,10 +19,12 @@ def lex_all(lexer: Lexer) -> List[Token]:
 
 class TestLexer:
     def test_single_char_tokens(self):
-        lexer = Lexer('+-/*')
+        lexer = Lexer('()+-/*')
         tokens = lex_all(lexer)
 
         assert list(map(lambda x: x.type, tokens)) == [
+            TokenType.LEFT_PAREN,
+            TokenType.RIGHT_PAREN,
             TokenType.PLUS,
             TokenType.MINUS,
             TokenType.SLASH,

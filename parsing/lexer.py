@@ -26,6 +26,8 @@ def is_alphanumeric(c: str) -> bool:
 
 class Lexer:
     __token_start_switch: Dict[str, Callable[['Lexer'], Token]] = {
+        '(': lambda self: self.__create_token(TokenType.LEFT_PAREN),
+        ')': lambda self: self.__create_token(TokenType.RIGHT_PAREN),
         '-': lambda self: self.__create_token(TokenType.MINUS),
         '+': lambda self: self.__create_token(TokenType.PLUS),
         '/': lambda self: self.__handle_slash(),
