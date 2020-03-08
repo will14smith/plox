@@ -22,36 +22,36 @@ class TestLexer:
         lexer = Lexer('+-/*')
         tokens = lex_all(lexer)
 
-        assert [
+        assert list(map(lambda x: x.type, tokens)) == [
             TokenType.PLUS,
             TokenType.MINUS,
             TokenType.SLASH,
             TokenType.STAR,
-        ] == list(map(lambda x: x.type, tokens))
+        ]
 
     def test_whitespace_is_ignored(self):
         lexer = Lexer('+ +')
         tokens = lex_all(lexer)
 
-        assert [
+        assert list(map(lambda x: x.type, tokens)) == [
            TokenType.PLUS,
            TokenType.PLUS,
-        ] == list(map(lambda x: x.type, tokens))
+        ]
 
     def test_comment_is_ignored(self):
         lexer = Lexer('+ //hello this is a comment\n+')
         tokens = lex_all(lexer)
 
-        assert [
+        assert list(map(lambda x: x.type, tokens)) == [
            TokenType.PLUS,
            TokenType.PLUS,
-        ] == list(map(lambda x: x.type, tokens))
+        ]
 
     def test_multichar_tokens(self):
         lexer = Lexer('! != = == < <= > >=')
         tokens = lex_all(lexer)
 
-        assert [
+        assert list(map(lambda x: x.type, tokens)) == [
             TokenType.BANG,
             TokenType.BANG_EQUAL,
             TokenType.EQUAL,
@@ -60,7 +60,7 @@ class TestLexer:
             TokenType.LESS_EQUAL,
             TokenType.GREATER,
             TokenType.GREATER_EQUAL,
-        ] == list(map(lambda x: x.type, tokens))
+        ]
 
     def test_string_tokens(self):
         lexer = Lexer('"Hello\nWorld\"')
@@ -74,10 +74,10 @@ class TestLexer:
         tokens = lex_all(lexer)
 
         assert all(map(lambda x: x.type == TokenType.NUMBER, tokens))
-        assert [
+        assert list(map(lambda x: x.literal, tokens)) == [
            1234,
            12.34,
-        ] == list(map(lambda x: x.literal, tokens))
+        ]
 
     def test_invalid_char_should_throw(self):
         lexer = Lexer('@')
