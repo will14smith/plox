@@ -3,8 +3,8 @@ from typing import Any, Callable, Dict
 import parsing.expr as exprs
 from parsing.expr import Expr, ExprVisitor
 
-BinaryOpHandler = Callable[['ExpressionEvaluator', Any, Any], Any]
-UnaryOpHandler = Callable[['ExpressionEvaluator', Any], Any]
+BinaryOpHandler = Callable[['ExpressionEvaluator', exprs.Binary, Any, Any], Any]
+UnaryOpHandler = Callable[['ExpressionEvaluator', exprs.Unary, Any], Any]
 
 
 def is_truthy(value: Any) -> bool:
@@ -38,40 +38,40 @@ def to_string(value: Any) -> str:
 
 
 def number_binary_op(handler: BinaryOpHandler) -> BinaryOpHandler:
-    def wrapped(self: 'ExprEvaluator', left: Any, right: Any):
+    def wrapped(self: 'ExprEvaluator', node: exprs.Binary, left: Any, right: Any):
         self.assert_numeric(left)
         self.assert_numeric(right)
 
-        return handler(self, left, right)
+        return handler(self, node, left, right)
 
     return wrapped
 
 
 def number_unary_op(handler: UnaryOpHandler) -> UnaryOpHandler:
-    def wrapped(self: 'ExprEvaluator', value: Any):
+    def wrapped(self: 'ExprEvaluator', node: exprs.Unary, value: Any):
         self.assert_numeric(value)
 
-        return handler(self, value)
+        return handler(self, node, value)
 
     return wrapped
 
 
 class ExprEvaluator(ExprVisitor):
     __binary_switch: Dict[exprs.BinaryOperatorType, BinaryOpHandler] = {
-        exprs.BinaryOperatorType.PLUS: lambda self, left, right: self.__handle_plus(left, right),
-        exprs.BinaryOperatorType.MINUS: number_binary_op(lambda self, left, right: left - right),
-        exprs.BinaryOperatorType.MULTIPLY: number_binary_op(lambda self, left, right: left * right),
-        exprs.BinaryOperatorType.DIVIDE: number_binary_op(lambda self, left, right: left / right),
-        exprs.BinaryOperatorType.EQUAL: number_binary_op(lambda self, left, right: is_equal(left, right)),
-        exprs.BinaryOperatorType.NOT_EQUAL: number_binary_op(lambda self, left, right: not is_equal(left, right)),
-        exprs.BinaryOperatorType.GREATER: number_binary_op(lambda self, left, right: left >= right),
-        exprs.BinaryOperatorType.GREATER_EQUAL: number_binary_op(lambda self, left, right: left >= right),
-        exprs.BinaryOperatorType.LESS: number_binary_op(lambda self, left, right: left < right),
-        exprs.BinaryOperatorType.LESS_EQUAL: number_binary_op(lambda self, left, right: left <= right),
+        exprs.BinaryOperatorType.PLUS: lambda self, node, left, right: self.__handle_plus(node, left, right),
+        exprs.BinaryOperatorType.MINUS: number_binary_op(lambda self, _, left, right: left - right),
+        exprs.BinaryOperatorType.MULTIPLY: number_binary_op(lambda self, _, left, right: left * right),
+        exprs.BinaryOperatorType.DIVIDE: number_binary_op(lambda self, _, left, right: left / right),
+        exprs.BinaryOperatorType.EQUAL: number_binary_op(lambda self, _, left, right: is_equal(left, right)),
+        exprs.BinaryOperatorType.NOT_EQUAL: number_binary_op(lambda self, _, left, right: not is_equal(left, right)),
+        exprs.BinaryOperatorType.GREATER: number_binary_op(lambda self, _, left, right: left >= right),
+        exprs.BinaryOperatorType.GREATER_EQUAL: number_binary_op(lambda self, _, left, right: left >= right),
+        exprs.BinaryOperatorType.LESS: number_binary_op(lambda self, _, left, right: left < right),
+        exprs.BinaryOperatorType.LESS_EQUAL: number_binary_op(lambda self, _, left, right: left <= right),
     }
-    __unary_switch: Dict[exprs.UnaryOperatorType, Callable[['ExpressionEvaluator', Any], Any]] = {
-        exprs.UnaryOperatorType.NEGATE: number_unary_op(lambda self, value: -value),
-        exprs.UnaryOperatorType.NOT: lambda self, value: not is_truthy(value),
+    __unary_switch: Dict[exprs.UnaryOperatorType, UnaryOpHandler] = {
+        exprs.UnaryOperatorType.NEGATE: number_unary_op(lambda self, _, value: -value),
+        exprs.UnaryOperatorType.NOT: lambda self, _, value: not is_truthy(value),
     }
 
     def evaluate(self, expression: Expr):
@@ -85,7 +85,7 @@ class ExprEvaluator(ExprVisitor):
         if handler is None:
             raise Exception('Handler for {} was None'.format(node.operator))
 
-        return handler(self, left, right)
+        return handler(self, node, left, right)
 
     def visit_grouping(self, node: exprs.Grouping):
         return self.evaluate(node.expression)
@@ -100,9 +100,9 @@ class ExprEvaluator(ExprVisitor):
         if handler is None:
             raise Exception('Handler for {} was None'.format(node.operator))
 
-        return handler(self, value)
+        return handler(self, node, value)
 
-    def __handle_plus(self, left: Any, right: Any) -> Any:
+    def __handle_plus(self, node: exprs.Binary, left: Any, right: Any) -> Any:
         if isinstance(left, str) or isinstance(right, str):
             return '{}{}'.format(to_string(left), to_string(right))
 
