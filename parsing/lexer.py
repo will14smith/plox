@@ -115,10 +115,14 @@ class Lexer:
         return self.__create_token(TokenType.STRING, literal_span.text())
 
     def __handle_number(self):
+        has_decimal = False
+
         while is_digit(self.__peek()):
             self.__advance()
 
         if self.__peek() == '.' and is_digit(self.__peek(1)):
+            has_decimal = True
+
             # consume the decimal point
             self.__advance()
 
@@ -126,7 +130,7 @@ class Lexer:
                 self.__advance()
 
         literal_span = SourceSpan.from_positions(self.__start, self.__current)
-        literal = float(literal_span.text())
+        literal = float(literal_span.text()) if has_decimal else int(literal_span.text())
         return self.__create_token(TokenType.NUMBER, literal)
 
     def __handle_identifier(self):

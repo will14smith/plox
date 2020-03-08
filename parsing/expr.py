@@ -35,7 +35,7 @@ class Binary(Expr):
         self.__right = right
 
     def accept(self, visitor: 'ExprVisitor'):
-        visitor.visit_binary(self)
+        return visitor.visit_binary(self)
 
     @property
     def left(self) -> Expr:
@@ -55,7 +55,7 @@ class Grouping(Expr):
         self.__expression = expression
 
     def accept(self, visitor: 'ExprVisitor'):
-        visitor.visit_grouping(self)
+        return visitor.visit_grouping(self)
 
     @property
     def expression(self) -> Expr:
@@ -67,7 +67,7 @@ class Literal(Expr):
         self.__value = value
 
     def accept(self, visitor: 'ExprVisitor'):
-        visitor.visit_literal(self)
+        return visitor.visit_literal(self)
 
     @property
     def value(self) -> Any:
@@ -80,7 +80,7 @@ class Unary(Expr):
         self.__expression = expression
 
     def accept(self, visitor: 'ExprVisitor'):
-        visitor.visit_unary(self)
+        return visitor.visit_unary(self)
 
     @property
     def operator(self) -> UnaryOperator:

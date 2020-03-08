@@ -53,7 +53,7 @@ def generate_ast(base: str, imports: List[str], enums: EnumDict, types: Dict[str
 
         one_blank()
         result.append('    def accept(self, visitor: \'ExprVisitor\'):')
-        result.append('        visitor.visit_{}(self)'.format(to_title_case(name)))
+        result.append('        return visitor.visit_{}(self)'.format(to_title_case(name)))
 
         for field in fields:
             one_blank()
