@@ -35,22 +35,25 @@ class TokenType(Enum):
     TRUE = auto()
 
 
+Literal = Union[str, float, bool]
+
+
 class Token:
-    def __init__(self, type: TokenType, span: SourceSpan, literal: Optional[Union[str, float, bool]]):
+    def __init__(self, type: TokenType, span: SourceSpan, literal: Optional[Literal]):
         self.__type = type
         self.__span = span
         self.__literal = literal
 
     @property
-    def type(self):
+    def type(self) -> TokenType:
         return self.__type
 
     @property
-    def span(self):
+    def span(self) -> SourceSpan:
         return self.__span
 
     @property
-    def literal(self):
+    def literal(self) -> Optional[Literal]:
         return self.__literal
 
     def __str__(self) -> str:

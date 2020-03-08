@@ -84,7 +84,7 @@ def main():
     define_ast(path.join(output_dir, "expr.py"), expr_base, [
         "from typing import Any"
     ], {
-        "BinaryOperator": ["MINUS", "PLUS", "MULTIPLY", "DIVIDE"],
+        "BinaryOperator": ["MINUS", "PLUS", "MULTIPLY", "DIVIDE", "NOT_EQUAL", "EQUAL", "GREATER", "GREATER_EQUAL", "LESS", "LESS_EQUAL"],
         "UnaryOperator": ["NEGATE", "NOT"],
     }, {
         "Binary": [("left", expr_base), ("operator", "BinaryOperator"), ("right", expr_base)],

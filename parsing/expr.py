@@ -15,6 +15,12 @@ class BinaryOperator(Enum):
     PLUS = auto()
     MULTIPLY = auto()
     DIVIDE = auto()
+    NOT_EQUAL = auto()
+    EQUAL = auto()
+    GREATER = auto()
+    GREATER_EQUAL = auto()
+    LESS = auto()
+    LESS_EQUAL = auto()
 
 
 class UnaryOperator(Enum):
