@@ -79,6 +79,25 @@ class TestLexer:
            12.34,
         ]
 
+    def test_identifier_tokens(self):
+        lexer = Lexer('a abc')
+        tokens = lex_all(lexer)
+
+        assert all(map(lambda x: x.type == TokenType.IDENTIFIER, tokens))
+        assert list(map(lambda x: x.span.text(), tokens)) == [
+            'a',
+            'abc',
+        ]
+
+    def test_keyword_tokens(self):
+        lexer = Lexer('and or')
+        tokens = lex_all(lexer)
+
+        assert list(map(lambda x: x.type, tokens)) == [
+            TokenType.AND,
+            TokenType.OR,
+        ]
+
     def test_invalid_char_should_throw(self):
         lexer = Lexer('@')
 

@@ -16,6 +16,14 @@ def is_digit(c: str) -> bool:
     return '0' <= c <= '9'
 
 
+def is_alpha(c: str) -> bool:
+    return 'a' <= c <= 'z' or 'A' <= c <= 'Z' or c == '_'
+
+
+def is_alphanumeric(c: str) -> bool:
+    return is_alpha(c) or is_digit(c)
+
+
 class Lexer:
     __token_start_switch: Dict[str, Callable[['Lexer'], Token]] = {
         '-': lambda self: self.__create_token(TokenType.MINUS),
@@ -31,6 +39,13 @@ class Lexer:
         '"': lambda self: self.__handle_string(),
     }
 
+    __keywords: Dict[str, TokenType] = {
+        'and': TokenType.AND,
+        'false': TokenType.FALSE,
+        'or': TokenType.OR,
+        'true': TokenType.TRUE,
+    }
+
     def __init__(self, input: str):
         self.__current = SourcePosition.initial(input)
         self.__start = self.__current
@@ -39,12 +54,11 @@ class Lexer:
         if self.is_at_end:
             return None
 
+        self.__skip_whitespace()
         self.__start = self.__current
         return self.__scan_token()
 
     def __scan_token(self):
-        self.__skip_whitespace()
-
         c = self.__advance()
         handler = self.__token_start_switch.get(c)
         if handler is not None:
@@ -52,6 +66,9 @@ class Lexer:
 
         if is_digit(c):
             return self.__handle_number()
+
+        if is_alpha(c):
+            return self.__handle_identifier()
 
         raise self.__error(InvalidLexerCharException, 'Invalid char \'{}\''.format(c))
 
@@ -97,6 +114,17 @@ class Lexer:
         literal_span = SourceSpan.from_positions(self.__start, self.__current)
         literal = float(literal_span.text())
         return self.__create_token(TokenType.NUMBER, literal)
+
+    def __handle_identifier(self):
+        while is_alphanumeric(self.__peek()):
+            self.__advance()
+
+        identifier_span = SourceSpan.from_positions(self.__start, self.__current)
+        keyword = self.__keywords.get(identifier_span.text())
+        if keyword is not None:
+            return self.__create_token(keyword)
+
+        return self.__create_token(TokenType.IDENTIFIER)
 
     def __skip_whitespace(self):
         while is_whitespace(self.current) or is_newline(self.current):
