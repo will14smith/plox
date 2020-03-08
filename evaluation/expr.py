@@ -3,6 +3,9 @@ from typing import Any, Callable, Dict
 import parsing.expr as exprs
 from parsing.expr import Expr, ExprVisitor
 
+BinaryOpHandler = Callable[['ExpressionEvaluator', Any, Any], Any]
+UnaryOpHandler = Callable[['ExpressionEvaluator', Any], Any]
+
 
 def is_truthy(value: Any) -> bool:
     if value is None:
@@ -22,21 +25,52 @@ def is_equal(a: Any, b: Any) -> bool:
     return a == b
 
 
+def to_string(value: Any) -> str:
+    if value is None:
+        return "nil"
+
+    text = str(value)
+
+    if isinstance(value, float) and text.endswith(".0"):
+        text = text[:-2]
+
+    return text
+
+
+def number_binary_op(handler: BinaryOpHandler) -> BinaryOpHandler:
+    def wrapped(self: 'ExprEvaluator', left: Any, right: Any):
+        self.assert_numeric(left)
+        self.assert_numeric(right)
+
+        return handler(self, left, right)
+
+    return wrapped
+
+
+def number_unary_op(handler: UnaryOpHandler) -> UnaryOpHandler:
+    def wrapped(self: 'ExprEvaluator', value: Any):
+        self.assert_numeric(value)
+
+        return handler(self, value)
+
+    return wrapped
+
+
 class ExprEvaluator(ExprVisitor):
-    __binary_switch: Dict[exprs.BinaryOperator, Callable[['ExpressionEvaluator', Any, Any], Any]] = {
+    __binary_switch: Dict[exprs.BinaryOperator, BinaryOpHandler] = {
         exprs.BinaryOperator.PLUS: lambda self, left, right: self.__handle_plus(left, right),
-        exprs.BinaryOperator.MINUS: lambda self, left, right: left - right,
-        exprs.BinaryOperator.MULTIPLY: lambda self, left, right: left * right,
-        exprs.BinaryOperator.DIVIDE: lambda self, left, right: left / right,
-        exprs.BinaryOperator.EQUAL: lambda self, left, right: is_equal(left, right),
-        exprs.BinaryOperator.NOT_EQUAL: lambda self, left, right: not is_equal(left, right),
-        exprs.BinaryOperator.GREATER: lambda self, left, right: left >= right,
-        exprs.BinaryOperator.GREATER_EQUAL: lambda self, left, right: left >= right,
-        exprs.BinaryOperator.LESS: lambda self, left, right: left < right,
-        exprs.BinaryOperator.LESS_EQUAL: lambda self, left, right: left <= right,
+        exprs.BinaryOperator.MINUS: number_binary_op(lambda self, left, right: left - right),
+        exprs.BinaryOperator.MULTIPLY: number_binary_op(lambda self, left, right: left * right),
+        exprs.BinaryOperator.DIVIDE: number_binary_op(lambda self, left, right: left / right),
+        exprs.BinaryOperator.EQUAL: number_binary_op(lambda self, left, right: is_equal(left, right)),
+        exprs.BinaryOperator.NOT_EQUAL: number_binary_op(lambda self, left, right: not is_equal(left, right)),
+        exprs.BinaryOperator.GREATER: number_binary_op(lambda self, left, right: left >= right),
+        exprs.BinaryOperator.GREATER_EQUAL: number_binary_op(lambda self, left, right: left >= right),
+        exprs.BinaryOperator.LESS: number_binary_op(lambda self, left, right: left < right),
+        exprs.BinaryOperator.LESS_EQUAL: number_binary_op(lambda self, left, right: left <= right),
     }
     __unary_switch: Dict[exprs.UnaryOperator, Callable[['ExpressionEvaluator', Any], Any]] = {
-        exprs.UnaryOperator.NEGATE: lambda self, value: -value,
+        exprs.UnaryOperator.NEGATE: number_unary_op(lambda self, value: -value),
         exprs.UnaryOperator.NOT: lambda self, value: not is_truthy(value),
     }
 
@@ -70,6 +104,17 @@ class ExprEvaluator(ExprVisitor):
 
     def __handle_plus(self, left: Any, right: Any) -> Any:
         if isinstance(left, str) or isinstance(right, str):
-            return '{}{}'.format(left, right)
+            return '{}{}'.format(to_string(left), to_string(right))
 
         return left + right
+
+    def assert_numeric(self, value: Any):
+        # TODO track where value is from/used in the source
+        if isinstance(value, int) or isinstance(value, float):
+            return
+
+        raise RuntimeException("Expected a number")
+
+
+class RuntimeException(Exception):
+    pass

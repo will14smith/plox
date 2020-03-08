@@ -1,5 +1,8 @@
 from typing import Any
 
+import pytest
+
+from evaluation.expr import RuntimeException
 from parsing.expr import Expr
 
 
@@ -43,6 +46,10 @@ class TestExprEvaluator:
         result = eval_expr('1 + 2')
 
         assert result == 3
+
+    def test_minus_string_should_throw(self):
+        with pytest.raises(RuntimeException):
+            eval_expr('1 - "a"')
 
     def test_string_addition(self):
         result = eval_expr('"a" + "b"')
