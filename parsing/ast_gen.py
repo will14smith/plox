@@ -21,6 +21,8 @@ def generate_ast(base: str, imports: List[str], enums: EnumDict, types: Dict[str
 
     if len(enums):
         result.append('from enum import auto, Enum')
+    result.append("from typing import Optional")
+    result.append("from parsing.source import SourceSpan")
     result.extend(imports)
 
     def one_blank():
@@ -29,11 +31,29 @@ def generate_ast(base: str, imports: List[str], enums: EnumDict, types: Dict[str
     def two_blank():
         result.extend(['', ''])
 
+    def prop(name: str, type: str):
+        result.append('    @property')
+        result.append('    def {}(self) -> {}:'.format(name, type))
+        result.append('        return self.__{}'.format(name))
+
+    def props(name: str, type: str):
+        result.append('    @property')
+        result.append('    def {}(self) -> {}:'.format(name, type))
+        result.append('        return self.__{}'.format(name))
+        one_blank()
+        result.append('    @{}.setter'.format(name))
+        result.append('    def {}(self, value: {}):'.format(name, type))
+        result.append('        self.__{} = value'.format(name))
+
     two_blank()
     result.append('class {}(abc.ABC):'.format(base))
+    result.append('    __span: Optional[SourceSpan]')
+    one_blank()
     result.append('    @abc.abstractmethod')
     result.append('    def accept(self, visitor: \'{}Visitor\'):'.format(base))
     result.append('        pass')
+    one_blank()
+    props('span', 'Optional[SourceSpan]')
 
     for name, items in enums.items():
         two_blank()
@@ -43,17 +63,16 @@ def generate_ast(base: str, imports: List[str], enums: EnumDict, types: Dict[str
 
         two_blank()
         result.append('class {}:'.format(name))
-        result.append('    def __init__(self, type: {}Type, source: SourceSpan) -> None:'.format(name))
+        result.append('    def __init__(self, type: {}Type, span: SourceSpan) -> None:'.format(name))
         result.append('        self.__type = type')
-        result.append('        self.__source = source')
+        result.append('        self.__span = span')
         one_blank()
         result.append('    @property')
         result.append('    def type(self) -> {}Type:'.format(name))
         result.append('        return self.__type')
+        prop('type', '{}Type'.format(name))
         one_blank()
-        result.append('    @property')
-        result.append('    def source(self) -> SourceSpan:')
-        result.append('        return self.__source')
+        prop('span', 'Optional[SourceSpan]')
 
     for name, fields in types.items():
         two_blank()
@@ -71,9 +90,7 @@ def generate_ast(base: str, imports: List[str], enums: EnumDict, types: Dict[str
 
         for field in fields:
             one_blank()
-            result.append('    @property')
-            result.append('    def {}(self) -> {}:'.format(field[0], field[1]))
-            result.append('        return self.__{}'.format(field[0]))
+            prop(field[0], field[1])
 
     two_blank()
     result.append('class {}Visitor:'.format(base))
@@ -97,7 +114,6 @@ def main():
     expr_base = "Expr"
     define_ast(path.join(output_dir, "expr.py"), expr_base, [
         "from typing import Any",
-        "from parsing.source import SourceSpan",
     ], {
         "BinaryOperator": ["MINUS", "PLUS", "MULTIPLY", "DIVIDE", "NOT_EQUAL", "EQUAL", "GREATER", "GREATER_EQUAL", "LESS", "LESS_EQUAL"],
         "UnaryOperator": ["NEGATE", "NOT"],

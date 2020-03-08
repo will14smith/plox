@@ -27,7 +27,7 @@ class Position:
         return self.__line_offset
 
     def __str__(self):
-        return "{}:{}".format(self.line, self.line_offset)
+        return "line {} offset {}".format(self.line, self.line_offset)
 
 
 class SourcePosition:
@@ -71,6 +71,13 @@ class SourceSpan:
 
         return SourceSpan(start.source, start.position, end.position)
 
+    @staticmethod
+    def from_spans(start: 'SourceSpan', end: 'SourceSpan'):
+        if start.source != end.source:
+            raise Exception('Sources don\'t match')
+
+        return SourceSpan(start.source, start.start, end.end)
+
     def text(self):
         return self.source[self.start.offset:self.end.offset]
 
@@ -85,3 +92,11 @@ class SourceSpan:
     @property
     def end(self) -> Position:
         return self.__end
+
+    def __str__(self) -> str:
+        if self.start.line == self.end.line:
+            return '{}-{}'.format(self.start, self.end.line_offset)
+
+        return '{} - {}'.format(self.start, self.end)
+
+

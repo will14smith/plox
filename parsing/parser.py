@@ -2,6 +2,7 @@ from typing import List
 
 import parsing.expr as exprs
 from parsing.expr import Expr
+from parsing.source import SourceSpan
 from parsing.token import Token, TokenType
 
 
@@ -48,7 +49,9 @@ class Parser:
         while self.__match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL):
             operator = token_to_binary_operator(self.__previous())
             right = self.__comparison()
-            expr = exprs.Binary(expr, operator, right)
+            new_expr = exprs.Binary(expr, operator, right)
+            new_expr.span = SourceSpan.from_spans(expr.span, right.span)
+            expr = new_expr
 
         return expr
 
@@ -58,7 +61,9 @@ class Parser:
         while self.__match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL):
             operator = token_to_binary_operator(self.__previous())
             right = self.__addition()
-            expr = exprs.Binary(expr, operator, right)
+            new_expr = exprs.Binary(expr, operator, right)
+            new_expr.span = SourceSpan.from_spans(expr.span, right.span)
+            expr = new_expr
 
         return expr
 
@@ -68,7 +73,9 @@ class Parser:
         while self.__match(TokenType.PLUS, TokenType.MINUS):
             operator = token_to_binary_operator(self.__previous())
             right = self.__multiplication()
-            expr = exprs.Binary(expr, operator, right)
+            new_expr = exprs.Binary(expr, operator, right)
+            new_expr.span = SourceSpan.from_spans(expr.span, right.span)
+            expr = new_expr
 
         return expr
 
@@ -78,31 +85,42 @@ class Parser:
         while self.__match(TokenType.SLASH, TokenType.STAR):
             operator = token_to_binary_operator(self.__previous())
             right = self.__unary()
-            expr = exprs.Binary(expr, operator, right)
+            new_expr = exprs.Binary(expr, operator, right)
+            new_expr.span = SourceSpan.from_spans(expr.span, right.span)
+            expr = new_expr
 
         return expr
 
     def __unary(self) -> Expr:
         if self.__match(TokenType.BANG, TokenType.MINUS):
             operator = token_to_unary_operator(self.__previous())
-            expr = self.__unary()
-            return exprs.Unary(operator, expr)
+            inner_expr = self.__unary()
+            expr = exprs.Unary(operator, inner_expr)
+            expr.span = SourceSpan.from_spans(operator.span, inner_expr.span)
+            return expr
 
         return self.__primary()
 
     def __primary(self) -> Expr:
+        def literal(value) -> Expr:
+            expr = exprs.Literal(value)
+            expr.span = self.__previous().span
+            return expr
+
         if self.__match(TokenType.FALSE):
-            return exprs.Literal(False)
+            return literal(False)
         if self.__match(TokenType.TRUE):
-            return exprs.Literal(True)
+            return literal(True)
 
         if self.__match(TokenType.NUMBER, TokenType.STRING):
-            return exprs.Literal(self.__previous().literal)
+            return literal(self.__previous().literal)
 
         if self.__match(TokenType.LEFT_PAREN):
-            expr = self.expression()
-            self.__consume(TokenType.RIGHT_PAREN, 'Expected \')\' after expression')
-            return exprs.Grouping(expr)
+            start = self.__previous()
+            expr = exprs.Grouping(self.expression())
+            end = self.__consume(TokenType.RIGHT_PAREN, 'Expected \')\' after expression')
+            expr.span = SourceSpan.from_spans(start.span, end.span)
+            return expr
 
         raise ParserException(self.__peek(), 'Expected expression')
 

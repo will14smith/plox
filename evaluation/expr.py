@@ -2,6 +2,7 @@ from typing import Any, Callable, Dict
 
 import parsing.expr as exprs
 from parsing.expr import Expr, ExprVisitor
+from parsing.source import SourceSpan
 
 BinaryOpHandler = Callable[['ExpressionEvaluator', exprs.Binary, Any, Any], Any]
 UnaryOpHandler = Callable[['ExpressionEvaluator', exprs.Unary, Any], Any]
@@ -39,8 +40,8 @@ def to_string(value: Any) -> str:
 
 def number_binary_op(handler: BinaryOpHandler) -> BinaryOpHandler:
     def wrapped(self: 'ExprEvaluator', node: exprs.Binary, left: Any, right: Any):
-        self.assert_numeric(left)
-        self.assert_numeric(right)
+        self.assert_numeric(node.left.span, left)
+        self.assert_numeric(node.right.span, right)
 
         return handler(self, node, left, right)
 
@@ -49,7 +50,7 @@ def number_binary_op(handler: BinaryOpHandler) -> BinaryOpHandler:
 
 def number_unary_op(handler: UnaryOpHandler) -> UnaryOpHandler:
     def wrapped(self: 'ExprEvaluator', node: exprs.Unary, value: Any):
-        self.assert_numeric(value)
+        self.assert_numeric(node.expression.span, value)
 
         return handler(self, node, value)
 
@@ -108,13 +109,19 @@ class ExprEvaluator(ExprVisitor):
 
         return left + right
 
-    def assert_numeric(self, value: Any):
+    def assert_numeric(self, span: SourceSpan, value: Any):
         # TODO track where value is from/used in the source
         if isinstance(value, int) or isinstance(value, float):
             return
 
-        raise RuntimeException("Expected a number")
+        raise RuntimeException(span, "Expected a number")
 
 
 class RuntimeException(Exception):
-    pass
+    def __init__(self, span: SourceSpan, message: str) -> None:
+        self.__span = span
+        self.__message = message
+
+    def __str__(self) -> str:
+        return "{} at {}".format(self.__message, self.__span)
+
